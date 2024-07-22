@@ -11,7 +11,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedHour = 200;
-  Offset _touchPosition = const Offset(0, 0);
+
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: CustomPaint(
                                 size: Size.infinite,
                                 painter: ChartPainter(
-                                  gPoints: dummyData,
+                                  gPoints: actualData,
                                   selectedHour: _selectedHour,
                                 ),
                               ),
@@ -82,13 +82,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _handleTouch(Offset position, BuildContext context) {
     setState(() {
-      _touchPosition = position;
       _selectedHour = _getHourIndex(position, context);
     });
   }
 
   int _getHourIndex(Offset position, BuildContext context) {
-    final double graphWidth = MediaQuery.of(context).size.width - 32; // Assuming 16.0 padding on each side
+    final double graphWidth = MediaQuery.of(context).size.width - 32;
     const hoursInDay = 48;
     final double stepX = graphWidth / hoursInDay;
     return (position.dx / stepX).round().clamp(0, hoursInDay - 1);

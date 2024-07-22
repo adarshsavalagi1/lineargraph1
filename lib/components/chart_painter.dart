@@ -68,8 +68,8 @@ class ChartPainter extends CustomPainter {
     const y1 = 0.0;
     final y2 = size.height;
 
-    final x_step = (x2 - x1) / 48;
-    final y_step = (y2 - y1) / 140;
+    final xStep = (x2 - x1) / 48;
+    final yStep = (y2 - y1) / 140;
 
     // 1. Draw y-axis dashed lines at specific positions
     final List<double> yPositions = [20, 80, 140];
@@ -78,7 +78,7 @@ class ChartPainter extends CustomPainter {
 
     for (double y in yPositions) {
       double startX = x1; // Starting x-coordinate of the dashed line
-      double lineY = y2 - (y * y_step); // Y-coordinate of the dashed line
+      double lineY = y2 - (y * yStep); // Y-coordinate of the dashed line
       while (startX < x2) {
         double dashEndX = startX + dashWidth;
         if (dashEndX > x2) {
@@ -102,7 +102,7 @@ class ChartPainter extends CustomPainter {
         style: const TextStyle(color: Colors.black, fontSize: 10),
       );
       textPainter.layout();
-      final y = y2 - yPositions[i] * y_step - 5;
+      final y = y2 - yPositions[i] * yStep - 5;
       textPainter.paint(canvas, Offset(x2 + 10, y));
     }
 
@@ -112,7 +112,7 @@ class ChartPainter extends CustomPainter {
       if (i * 2 % 6 == 0) {
         return Offset(0, size.height);
       }
-      final x = i * x_step * 2;
+      final x = i * xStep * 2;
       return Offset(x, size.height);
     });
     canvas.drawPoints(PointMode.points, Xpoints1, dotPaint1);
@@ -121,7 +121,7 @@ class ChartPainter extends CustomPainter {
       if (i * 2 % 6 != 0) {
         return Offset(0, size.height);
       }
-      final x = i * x_step * 2;
+      final x = i * xStep * 2;
       return Offset(x, size.height);
     });
 
@@ -136,7 +136,7 @@ class ChartPainter extends CustomPainter {
         style: const TextStyle(color: Colors.black, fontSize: 10),
       );
       textPainter.layout();
-      final x = i * x_step * 12 + 5;
+      final x = i * xStep * 12 + 5;
       textPainter.paint(
           canvas, Offset(x - textPainter.width / 2, size.height + 7));
     }
@@ -146,10 +146,10 @@ class ChartPainter extends CustomPainter {
     final List<Offset> points = [];
     for (int i = 0; i < gPoints.length; i++) {
       final gp = gPoints[i];
-      final x = gp.hour * x_step;
-      final yMedian = y2 - y_step * gp.median;
-      final yMin = y2 - y_step * gp.min;
-      final yMax = y2 - y_step * gp.max;
+      final x = gp.hour * xStep;
+      final yMedian = y2 - yStep * gp.median;
+      final yMin = y2 - yStep * gp.min;
+      final yMax = y2 - yStep * gp.max;
 
       // Draw the point for median
       canvas.drawPoints(PointMode.points, [Offset(x, yMedian)], graphLinePaint);
@@ -217,7 +217,7 @@ class ChartPainter extends CustomPainter {
       const double dashHeight = 5.0;
       const double dashSpace = 3.0;
       double startY = x1;
-      final dx = selectedHour * x_step;
+      final dx = selectedHour * xStep;
 
       while (startY < y2) {
         canvas.drawLine(
@@ -236,7 +236,7 @@ class ChartPainter extends CustomPainter {
                     ? a
                     : b)
                 .hour *
-            x_step;
+            xStep;
         const double dashHeight = 5.0;
         const double dashSpace = 3.0;
         double startY = 0.0;
@@ -258,8 +258,8 @@ class ChartPainter extends CustomPainter {
     // Find their corresponding points
     final minIndex = gPoints.where((gp) => gp.min == minValue).first.hour;
     final maxIndex = gPoints.where((gp) => gp.max == maxValue).first.hour;
-    final minX = minIndex * x_step;
-    final maxX = maxIndex * x_step;
+    final minX = minIndex * xStep;
+    final maxX = maxIndex * xStep;
 
     final minText = '$minValue';
     final maxText = '$maxValue';
@@ -273,7 +273,7 @@ class ChartPainter extends CustomPainter {
     textPainter.text = textSpan;
     textPainter.layout();
     final textX = minX + 10;
-    final textY = y2 - minValue * y_step - 10;
+    final textY = y2 - minValue * yStep - 10;
     textPainter.paint(canvas, Offset(textX, textY));
 
     // Draw tooltip for the maximum value
@@ -285,7 +285,7 @@ class ChartPainter extends CustomPainter {
     textPainter.text = textSpanMax;
     textPainter.layout();
     final textXMax = maxX;
-    final textYMax = y2 - maxValue * y_step - 10;
+    final textYMax = y2 - maxValue * yStep - 10;
     textPainter.paint(canvas, Offset(textXMax, textYMax));
 
     // Selected Tooltip
@@ -304,9 +304,9 @@ class ChartPainter extends CustomPainter {
               ? 32
               : selectedHour - 8;
       final constraints = [
-        0.0 + (newX * x_step),
+        0.0 + (newX * xStep),
         -50.0,
-        100.0 + (newX * x_step),
+        100.0 + (newX * xStep),
         0.0
       ];
       final rect = RRect.fromLTRBR(
