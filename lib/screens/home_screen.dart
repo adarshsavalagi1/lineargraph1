@@ -10,6 +10,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _selectedHour = 200;
+  Offset _touchPosition = const Offset(0, 0);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,19 +46,47 @@ class _HomeScreenState extends State<HomeScreen> {
                                 height: 200,
                                 child: CustomPaint(
                                   size: Size.infinite,
-                                  painter: ChartPainter(gPoints: dummyData,selectedHour: 27),
+                                  painter: ChartPainter(
+                                      gPoints: dummyData,
+                                      selectedHour: _selectedHour),
                                 )),
                           ),
                         ],
                       )
                     ],
                   ),
-                )
+                ),
+                GestureDetector(
+                  onTapDown: (details) {
+                    _handleTouch(details.localPosition);
+                  },
+                  onHorizontalDragUpdate: (details) {
+                    _handleTouch(details.localPosition);
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 200,
+                    color: Colors.transparent,
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  void _handleTouch(Offset position) {
+    setState(() {
+      _touchPosition = position;
+      _selectedHour = _getHourIndex(position);
+    });
+  }
+
+  int _getHourIndex(Offset position) {
+    const hoursInDay = 48;
+    const double stepX = 360 / hoursInDay;
+    return (position.dx / stepX).round().clamp(0, hoursInDay - 1);
   }
 }

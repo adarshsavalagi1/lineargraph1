@@ -108,20 +108,20 @@ class ChartPainter extends CustomPainter {
 
     // 3. dots along x axis
 
-    final List<Offset> Xpoints1 = List.generate(48, (i) {
-      if (i % 6 == 0) {
+    final List<Offset> Xpoints1 = List.generate(24, (i) {
+      if (i * 2 % 6 == 0) {
         return Offset(0, size.height);
       }
-      final x = i * x_step;
+      final x = i * x_step * 2;
       return Offset(x, size.height);
     });
     canvas.drawPoints(PointMode.points, Xpoints1, dotPaint1);
 
-    final List<Offset> Xpoints2 = List.generate(49, (i) {
-      if (i % 6 != 0) {
+    final List<Offset> Xpoints2 = List.generate(24, (i) {
+      if (i * 2 % 6 != 0) {
         return Offset(0, size.height);
       }
-      final x = i * x_step;
+      final x = i * x_step * 2;
       return Offset(x, size.height);
     });
 
@@ -211,13 +211,13 @@ class ChartPainter extends CustomPainter {
     }
 
     // 6. mark the selected Line
-    if (selectedHour >= 0 &&
-        selectedHour < points.length &&
-        selectedHour != 200) {
+    bool selectedHourPresent =
+        gPoints.where((gp) => gp.hour == selectedHour).isNotEmpty;
+    if (selectedHourPresent) {
       const double dashHeight = 5.0;
       const double dashSpace = 3.0;
       double startY = x1;
-      final dx = points[selectedHour].dx;
+      final dx = selectedHour * x_step;
 
       while (startY < y2) {
         canvas.drawLine(
@@ -227,20 +227,28 @@ class ChartPainter extends CustomPainter {
         );
         startY += dashHeight + dashSpace;
       }
-    } else if (selectedHour >= points.length) {
-      final dx = points.last.dx;
-      const double dashHeight = 5.0;
-      const double dashSpace = 3.0;
-      double startY = 0.0;
-      while (startY < y2) {
-        canvas.drawLine(
-          Offset(dx, startY),
-          Offset(dx, startY + dashHeight),
-          selectedLinePaint,
-        );
-        startY += dashHeight + dashSpace;
+    } else {
+      // calculate nearest point
+      if (selectedHour != 200) {
+        final dx = gPoints
+                .reduce((a, b) => (a.hour - selectedHour).abs() <
+                        (b.hour - selectedHour).abs()
+                    ? a
+                    : b)
+                .hour *
+            x_step;
+        const double dashHeight = 5.0;
+        const double dashSpace = 3.0;
+        double startY = 0.0;
+        while (startY < y2) {
+          canvas.drawLine(
+            Offset(dx, startY),
+            Offset(dx, startY + dashHeight),
+            selectedLinePaint,
+          );
+          startY += dashHeight + dashSpace;
+        }
       }
-      // show min and max
     }
 
     // Find the smallest and largest values in dataPoints
@@ -282,16 +290,23 @@ class ChartPainter extends CustomPainter {
 
     // Selected Tooltip
     if (selectedHour != 200) {
-      final selectedPoint =
-          gPoints.where((gp) => gp.hour == selectedHour).first;
+      final selectedPoint = gPoints.reduce((a, b) =>
+          (a.hour - selectedHour).abs() < (b.hour - selectedHour).abs()
+              ? a
+              : b);
       final paint = Paint()
         ..color = Colors.white
         ..style = PaintingStyle.fill;
 
+      final newX = selectedHour <= 8
+          ? 0
+          : selectedHour >= 40
+              ? 32
+              : selectedHour - 8;
       final constraints = [
-        0.0 + (selectedHour * x_step),
+        0.0 + (newX * x_step),
         -50.0,
-        100.0 + (selectedHour * x_step),
+        100.0 + (newX * x_step),
         0.0
       ];
       final rect = RRect.fromLTRBR(

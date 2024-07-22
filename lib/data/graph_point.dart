@@ -10,6 +10,7 @@ class Graphpoint {
 }
 
 List<Graphpoint> dummyData = [
+  Graphpoint(29, 92, 53, 0),
   Graphpoint(20, 90, 50, 1),
   Graphpoint(25, 85, 55, 2),
   Graphpoint(15, 75, 40, 3),
@@ -53,4 +54,5 @@ List<Graphpoint> dummyData = [
   Graphpoint(25, 35, 30, 41),
   Graphpoint(15, 25, 20, 42),
   Graphpoint(35, 45, 40, 43),
+  Graphpoint(35, 45, 40, 47),
 ];
