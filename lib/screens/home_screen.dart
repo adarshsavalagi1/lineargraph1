@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               padding: const EdgeInsets.symmetric(
                                   vertical: 10, horizontal: 3),
                               height: 200,
-                              child: CustomPaint(
+                              child:  CustomPaint(
                                 size: Size.infinite,
                                 painter: ChartPainter(
                                   gPoints: actualData,

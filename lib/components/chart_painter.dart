@@ -21,7 +21,7 @@ class ChartPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final dashedLinePaint = Paint()
-      ..color = Colors.grey.shade700
+      ..color = Colors.grey.shade300
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -109,7 +109,7 @@ class ChartPainter extends CustomPainter {
     // 3. dots along x axis
 
     final List<Offset> Xpoints1 = List.generate(24, (i) {
-      if (i * 2 % 6 == 0) {
+      if (i  % 6 == 0) {
         return Offset(0, size.height);
       }
       final x = i * xStep * 2;
@@ -118,7 +118,7 @@ class ChartPainter extends CustomPainter {
     canvas.drawPoints(PointMode.points, Xpoints1, dotPaint1);
 
     final List<Offset> Xpoints2 = List.generate(24, (i) {
-      if (i * 2 % 6 != 0) {
+      if (i  % 6 != 0) {
         return Offset(0, size.height);
       }
       final x = i * xStep * 2;
