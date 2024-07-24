@@ -46,10 +46,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               padding: const EdgeInsets.symmetric(
                                   vertical: 10, horizontal: 3),
                               height: 200,
-                              child:  emptyData.isNotEmpty? CustomPaint(
+                              child:  newSetData.isNotEmpty? CustomPaint(
                                 size: Size.infinite,
                                 painter: ChartPainter(
-                                    gPoints: actualData,
+                                    gPoints: newSetData,
                                     selectedHour: _selectedHour,
                                     isTouched: _isTouched),
                               ):const EmptyWidget(),

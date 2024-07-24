@@ -17,28 +17,242 @@ class ChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Lines paint
+    const x1 = 0.0;
+    final x2 = size.width - (size.width * 0.15);
+    const y1 = 0.0;
+    final y2 = size.height;
+    final xStep = (x2 - x1) / 48;
+    final yStep = (y2 - y1) / 140;
+
+    // 1. construct graph skeleton
+    constructGraph(canvas, size, x1, x2, xStep, yStep, y1, y2);
+
+    // 2. Plotting the graph
+    plotGraph(canvas, xStep, yStep, y1, y2);
+
+    // 3. mark the selected Line
+    markSelectedLine(canvas, xStep, yStep, y2, x1);
+
+    // 3.1 Selected Tooltip
+    drawSelectedToolTip(canvas, xStep);
+  }
+
+  void plotGraph(
+      Canvas canvas, double xStep, double yStep, double y1, double y2) {
+    // Paint for shading
+    final shadedPaint = Paint()
+      ..color = Colors.red.withOpacity(0.3)
+      ..style = PaintingStyle.fill;
+
+    // Paint for graph lines
     final graphLinePaint = Paint()
       ..color = Colors.red
       ..strokeWidth = 3.0
       ..style = PaintingStyle.stroke;
 
-    final dashedLinePaint = Paint()
-      ..color = Colors.grey.shade300
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+    final minMaxLinePaint = Paint()
+      ..color = Colors.red.withOpacity(0.3)
+      ..style = PaintingStyle.stroke;
 
+    gPoints.sort((a, b) => a.hour.compareTo(b.hour));
+
+    final List<Offset> medianPoints = [];
+    final List<Offset> minPoints = [];
+    final List<Offset> maxPoints = [];
+
+    for (int i = 0; i < gPoints.length; i++) {
+      final gp = gPoints[i];
+      final x = gp.hour * xStep;
+      final yMedian = y2 - yStep * gp.median;
+      final yMin = y2 - yStep * gp.min;
+      final yMax = y2 - yStep * gp.max;
+
+      // Draw the point for median
+      canvas.drawPoints(PointMode.points, [Offset(x, yMedian)], graphLinePaint);
+
+      // Draw the point for min
+      canvas.drawPoints(PointMode.points, [Offset(x, yMin)], minMaxLinePaint);
+
+      // Draw the point for max
+      canvas.drawPoints(PointMode.points, [Offset(x, yMax)], minMaxLinePaint);
+
+      medianPoints.add(Offset(x, yMedian));
+      minPoints.add(Offset(x, yMin));
+      maxPoints.add(Offset(x, yMax));
+
+      // Draw cubic Bezier curves and shade only between consecutive points
+      if (i > 0 && gp.hour == gPoints[i - 1].hour + 1) {
+        // Shading between consecutive min and max points
+        final shadedPath = Path();
+        final prevMin = minPoints[i - 1];
+        final currentMin = minPoints[i];
+        final prevMax = maxPoints[i - 1];
+        final currentMax = maxPoints[i];
+
+        shadedPath.moveTo(prevMin.dx, prevMin.dy);
+        shadedPath.lineTo(currentMin.dx, currentMin.dy);
+        shadedPath.lineTo(currentMax.dx, currentMax.dy);
+        shadedPath.lineTo(prevMax.dx, prevMax.dy);
+        shadedPath.close();
+
+        canvas.drawPath(shadedPath, shadedPaint);
+
+        // for median
+        final p1 = medianPoints[i - 1];
+        final p2 = medianPoints[i];
+        final controlPoint1 = Offset((p1.dx + p2.dx) / 2, p1.dy);
+        final controlPoint2 = Offset((p1.dx + p2.dx) / 2, p2.dy);
+        final path = Path()
+          ..moveTo(p1.dx, p1.dy)
+          ..cubicTo(controlPoint1.dx, controlPoint1.dy, controlPoint2.dx,
+              controlPoint2.dy, p2.dx, p2.dy);
+        canvas.drawPath(path, graphLinePaint);
+
+        // for min
+        final pm1 = minPoints[i - 1];
+        final pm2 = minPoints[i];
+        final minPoint1 = Offset((pm1.dx + pm2.dx) / 2, pm1.dy);
+        final minPoint2 = Offset((pm1.dx + pm2.dx) / 2, pm2.dy);
+        final minPath = Path()
+          ..moveTo(pm1.dx, pm1.dy)
+          ..cubicTo(minPoint1.dx, minPoint1.dy, minPoint2.dx, minPoint2.dy,
+              pm2.dx, pm2.dy);
+        canvas.drawPath(minPath, minMaxLinePaint);
+
+        // for max
+        final pmx1 = maxPoints[i - 1];
+        final pmx2 = maxPoints[i];
+        final maxPoint1 = Offset((pmx1.dx + pmx2.dx) / 2, pmx1.dy);
+        final maxPoint2 = Offset((pmx1.dx + pmx2.dx) / 2, pmx2.dy);
+        final maxPath = Path()
+          ..moveTo(pmx1.dx, pmx1.dy)
+          ..cubicTo(maxPoint1.dx, maxPoint1.dy, maxPoint2.dx, maxPoint2.dy,
+              pmx2.dx, pmx2.dy);
+        canvas.drawPath(maxPath, minMaxLinePaint);
+      }
+    }
+  }
+
+  void markSelectedLine(
+      Canvas canvas, double xStep, double yStep, double y2, double x1) {
+    final textPainter = TextPainter(
+        textAlign: TextAlign.center, textDirection: TextDirection.ltr);
     final selectedLinePaint = Paint()
       ..color = Colors.black
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
-    // shaded paint
-    final shadedPaint = Paint()
-      ..color = Colors.red.withOpacity(0.3)
+    final Paint minMaxToolTipPaint = Paint()
+      ..color = Colors.white
       ..style = PaintingStyle.fill;
 
+    bool selectedHourPresent =
+        gPoints.where((gp) => gp.hour == selectedHour).isNotEmpty;
+    if (isTouched) {
+      if (selectedHourPresent) {
+        const double dashHeight = 5.0;
+        const double dashSpace = 3.0;
+        double startY = x1;
+        final dx = selectedHour * xStep;
+
+        while (startY < y2) {
+          canvas.drawLine(
+            Offset(dx, startY),
+            Offset(dx, startY + dashHeight),
+            selectedLinePaint,
+          );
+          startY += dashHeight + dashSpace;
+        }
+      } else {
+        // calculate nearest point
+        if (selectedHour != 200) {
+          final dx = gPoints
+                  .reduce((a, b) => (a.hour - selectedHour).abs() <
+                          (b.hour - selectedHour).abs()
+                      ? a
+                      : b)
+                  .hour *
+              xStep;
+          const double dashHeight = 5.0;
+          const double dashSpace = 3.0;
+          double startY = 0.0;
+          while (startY < y2) {
+            canvas.drawLine(
+              Offset(dx, startY),
+              Offset(dx, startY + dashHeight),
+              selectedLinePaint,
+            );
+            startY += dashHeight + dashSpace;
+          }
+        }
+      }
+    } else {
+      // Min-Max Tooltip start
+      int minValue = gPoints.map((gp) => gp.min).reduce(min).toInt();
+      int maxValue = gPoints.map((gp) => gp.max).reduce(max).toInt();
+
+      // Find their corresponding points
+      final minIndex = gPoints.where((gp) => gp.min == minValue).first.hour;
+      final maxIndex = gPoints.where((gp) => gp.max == maxValue).first.hour;
+      final minX = minIndex * xStep;
+      final maxX = maxIndex * xStep;
+
+      const paddingX = 10.0;
+      const paddingY = 2.0;
+      const borderRadius = 8.0;
+
+      // Draw tooltip for the minimum value
+      final textSpan = TextSpan(
+        text: '$minValue',
+        style: const TextStyle(
+            color: Colors.black, fontSize: 12, backgroundColor: Colors.white),
+      );
+      textPainter.text = textSpan;
+      textPainter.layout();
+      final textX = minX + paddingX + 5;
+      final textY = y2 - minValue * yStep - paddingY - 10;
+
+      final Rect rect1 = Rect.fromPoints(
+        Offset(textX - paddingX, textY - paddingY),
+        Offset(textX + textPainter.width + paddingX,
+            textY + textPainter.height + paddingY),
+      );
+      final RRect rrect1 =
+          RRect.fromRectAndRadius(rect1, const Radius.circular(borderRadius));
+      canvas.drawRRect(rrect1, minMaxToolTipPaint);
+      textPainter.paint(canvas, Offset(textX, textY));
+      // Draw tooltip for the maximum value
+      final textSpanMax = TextSpan(
+        text: '$maxValue',
+        style: const TextStyle(color: Colors.black, fontSize: 12),
+      );
+
+      textPainter.text = textSpanMax;
+      textPainter.layout();
+      final textXMax = maxX + paddingX + 10;
+      final textYMax = y2 - maxValue * yStep - paddingY - 12;
+
+      final Rect rect2 = Rect.fromPoints(
+        Offset(textXMax - paddingX, textYMax - paddingY),
+        Offset(textXMax + textPainter.width + paddingX,
+            textYMax + textPainter.height + paddingY),
+      );
+      final RRect rrect2 =
+          RRect.fromRectAndRadius(rect2, const Radius.circular(borderRadius));
+      canvas.drawRRect(rrect2, minMaxToolTipPaint);
+      textPainter.paint(canvas, Offset(textXMax, textYMax));
+
+      // Min-Max Tooltip end
+    }
+  }
+
+  void constructGraph(Canvas canvas, Size size, double x1, double x2,
+      double xStep, double yStep, double y1, double y2) {
+    final dashedLinePaint = Paint()
+      ..color = Colors.grey.shade300
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
     // dotted paint
     final dotPaint1 = Paint()
       ..color = Colors.grey
@@ -49,32 +263,8 @@ class ChartPainter extends CustomPainter {
       ..color = Colors.black
       ..strokeWidth = 2.0
       ..style = PaintingStyle.fill;
-
-    final Paint minMaxToolTipPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-
-    // text paint
     final textPainter = TextPainter(
         textAlign: TextAlign.center, textDirection: TextDirection.ltr);
-    // defining paint stop
-
-    // canvas.drawLine(const Offset(0, 0), Offset(0, size.height), graphLinePaint);
-    // canvas.drawLine(const Offset(0, 0),
-    //     Offset(size.width - (size.width * 0.15), 0), graphLinePaint);
-    // canvas.drawLine(Offset(size.width - (size.width * 0.15), size.height),
-    //     Offset(0, size.height), graphLinePaint);
-    // canvas.drawLine(Offset(size.width - (size.width * 0.15), size.height),
-    //     Offset(size.width - (size.width * 0.15), 0), graphLinePaint);
-
-    const x1 = 0.0;
-    final x2 = size.width - (size.width * 0.15);
-
-    const y1 = 0.0;
-    final y2 = size.height;
-
-    final xStep = (x2 - x1) / 48;
-    final yStep = (y2 - y1) / 140;
 
     // 1. Draw y-axis dashed lines at specific positions
     final List<double> yPositions = [20, 80, 140];
@@ -145,190 +335,9 @@ class ChartPainter extends CustomPainter {
       textPainter.paint(
           canvas, Offset(x - textPainter.width / 2, size.height + 7));
     }
+  }
 
-    // 5. Plotting the graph
-    gPoints.sort((a, b) => a.hour.compareTo(b.hour));
-    final List<Offset> points = [];
-    for (int i = 0; i < gPoints.length; i++) {
-      final gp = gPoints[i];
-      final x = gp.hour * xStep;
-      final yMedian = y2 - yStep * gp.median;
-      final yMin = y2 - yStep * gp.min;
-      final yMax = y2 - yStep * gp.max;
-
-      // Draw the point for median
-      canvas.drawPoints(PointMode.points, [Offset(x, yMedian)], graphLinePaint);
-
-      // Draw the point for min
-      canvas.drawPoints(PointMode.points, [Offset(x, yMin)], shadedPaint);
-
-      // Draw the point for max
-      canvas.drawPoints(PointMode.points, [Offset(x, yMax)], shadedPaint);
-
-      // Draw cubic Bezier curves between consecutive points
-      if (i > 0 && gp.hour == gPoints[i - 1].hour + 1) {
-        final p1 = points.last;
-        final p2 = Offset(x, yMedian);
-        final controlPoint1 = Offset((p1.dx + p2.dx) / 2, p1.dy);
-        final controlPoint2 = Offset((p1.dx + p2.dx) / 2, p2.dy);
-        final path = Path()
-          ..moveTo(p1.dx, p1.dy)
-          ..cubicTo(
-            controlPoint1.dx,
-            controlPoint1.dy,
-            controlPoint2.dx,
-            controlPoint2.dy,
-            p2.dx,
-            p2.dy,
-          );
-        canvas.drawPath(path, graphLinePaint);
-
-        // Draw shaded region between median and min using quadratic Bezier curves
-        final pathShadedMin = Path()
-          ..moveTo(p1.dx, p1.dy)
-          ..lineTo(p2.dx, p2.dy)
-          ..lineTo(p2.dx, yMin)
-          ..quadraticBezierTo(
-            (p2.dx + p1.dx) / 2, // Control point x
-            yMin, // Control point y
-            p1.dx, // End point x (back to p1)
-            p1.dy, // End point y (back to p1)
-          )
-          ..close();
-        canvas.drawPath(pathShadedMin, shadedPaint);
-
-        // Draw shaded region between median and max using quadratic Bezier curves
-        final pathShadedMax = Path()
-          ..moveTo(p1.dx, p1.dy)
-          ..lineTo(p2.dx, p2.dy)
-          ..lineTo(p2.dx, yMax)
-          ..quadraticBezierTo(
-            (p2.dx + p1.dx) / 2, // Control point x
-            yMax, // Control point y
-            p1.dx, // End point x (back to p1)
-            p1.dy, // End point y (back to p1)
-          )
-          ..close();
-        canvas.drawPath(pathShadedMax, shadedPaint);
-      }
-
-      points.add(Offset(x, yMedian));
-    }
-
-    // 6. mark the selected Line
-    bool selectedHourPresent =
-        gPoints.where((gp) => gp.hour == selectedHour).isNotEmpty;
-    if (isTouched) {
-      if (selectedHourPresent) {
-        const double dashHeight = 5.0;
-        const double dashSpace = 3.0;
-        double startY = x1;
-        final dx = selectedHour * xStep;
-
-        while (startY < y2) {
-          canvas.drawLine(
-            Offset(dx, startY),
-            Offset(dx, startY + dashHeight),
-            selectedLinePaint,
-          );
-          startY += dashHeight + dashSpace;
-        }
-      } else {
-        // calculate nearest point
-        if (selectedHour != 200) {
-          final dx = gPoints
-                  .reduce((a, b) => (a.hour - selectedHour).abs() <
-                          (b.hour - selectedHour).abs()
-                      ? a
-                      : b)
-                  .hour *
-              xStep;
-          const double dashHeight = 5.0;
-          const double dashSpace = 3.0;
-          double startY = 0.0;
-          while (startY < y2) {
-            canvas.drawLine(
-              Offset(dx, startY),
-              Offset(dx, startY + dashHeight),
-              selectedLinePaint,
-            );
-            startY += dashHeight + dashSpace;
-          }
-        }
-      }
-    } else {
-      final dx = DateTime.now().hour * xStep * 2;
-      const double dashHeight = 5.0;
-      const double dashSpace = 3.0;
-      double startY = 0.0;
-      while (startY < y2) {
-        canvas.drawLine(
-          Offset(dx, startY),
-          Offset(dx, startY + dashHeight),
-          selectedLinePaint,
-        );
-        startY += dashHeight + dashSpace;
-      }
-
-      // Min-Max Tooltip start
-      int minValue = gPoints.map((gp) => gp.min).reduce(min).toInt();
-      int maxValue = gPoints.map((gp) => gp.max).reduce(max).toInt();
-
-      // Find their corresponding points
-      final minIndex = gPoints.where((gp) => gp.min == minValue).first.hour;
-      final maxIndex = gPoints.where((gp) => gp.max == maxValue).first.hour;
-      final minX = minIndex * xStep;
-      final maxX = maxIndex * xStep;
-
-      const paddingX = 10.0;
-      const paddingY = 2.0;
-      const borderRadius = 8.0;
-
-      // Draw tooltip for the minimum value
-      final textSpan = TextSpan(
-        text: '$minValue',
-        style: const TextStyle(
-            color: Colors.black, fontSize: 12, backgroundColor: Colors.white),
-      );
-      textPainter.text = textSpan;
-      textPainter.layout();
-      final textX = minX + paddingX + 5;
-      final textY = y2 - minValue * yStep - paddingY - 10;
-
-      final Rect rect1 = Rect.fromPoints(
-        Offset(textX - paddingX, textY - paddingY),
-        Offset(textX + textPainter.width + paddingX,
-            textY + textPainter.height + paddingY),
-      );
-      final RRect rrect1 =
-          RRect.fromRectAndRadius(rect1, const Radius.circular(borderRadius));
-      canvas.drawRRect(rrect1, minMaxToolTipPaint);
-      textPainter.paint(canvas, Offset(textX, textY));
-      // Draw tooltip for the maximum value
-      final textSpanMax = TextSpan(
-        text: '$maxValue',
-        style: const TextStyle(color: Colors.black, fontSize: 12),
-      );
-
-      textPainter.text = textSpanMax;
-      textPainter.layout();
-      final textXMax = maxX + paddingX + 10;
-      final textYMax = y2 - maxValue * yStep - paddingY - 12;
-
-      final Rect rect2 = Rect.fromPoints(
-        Offset(textXMax - paddingX, textYMax - paddingY),
-        Offset(textXMax + textPainter.width + paddingX,
-            textYMax + textPainter.height + paddingY),
-      );
-      final RRect rrect2 =
-          RRect.fromRectAndRadius(rect2, const Radius.circular(borderRadius));
-      canvas.drawRRect(rrect2, minMaxToolTipPaint);
-      textPainter.paint(canvas, Offset(textXMax, textYMax));
-
-      // Min-Max Tooltip end
-    }
-
-    // Selected Tooltip
+  void drawSelectedToolTip(Canvas canvas, double xStep) {
     if (selectedHour != 200 && isTouched) {
       final selectedPoint = gPoints.reduce((a, b) =>
           (a.hour - selectedHour).abs() < (b.hour - selectedHour).abs()
