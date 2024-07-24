@@ -101,7 +101,7 @@ List<Graphpoint> actualData = [
   // Graphpoint(10, 20, 15, 39),
   // Graphpoint(5, 15, 10, 40),
   // Graphpoint(25, 35, 30, 41),
-  // Graphpoint(15, 25, 20, 42),
+  Graphpoint(15, 120, 75, 42),
   // Graphpoint(35, 45, 40, 43),
   // Graphpoint(35, 45, 40, 47),
 ];

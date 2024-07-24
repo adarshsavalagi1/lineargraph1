@@ -50,11 +50,13 @@ class ChartPainter extends CustomPainter {
       ..strokeWidth = 2.0
       ..style = PaintingStyle.fill;
 
+    final Paint minMaxToolTipPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
     // text paint
     final textPainter = TextPainter(
-      textAlign: TextAlign.center,
-      textDirection: TextDirection.ltr,
-    );
+        textAlign: TextAlign.center, textDirection: TextDirection.ltr);
     // defining paint stop
 
     // canvas.drawLine(const Offset(0, 0), Offset(0, size.height), graphLinePaint);
@@ -267,7 +269,8 @@ class ChartPainter extends CustomPainter {
         );
         startY += dashHeight + dashSpace;
       }
-    // Find the smallest and largest values in dataPoints
+
+      // Min-Max Tooltip start
       int minValue = gPoints.map((gp) => gp.min).reduce(min).toInt();
       int maxValue = gPoints.map((gp) => gp.max).reduce(max).toInt();
 
@@ -277,36 +280,53 @@ class ChartPainter extends CustomPainter {
       final minX = minIndex * xStep;
       final maxX = maxIndex * xStep;
 
-      final minText = '$minValue';
-      final maxText = '$maxValue';
+      const paddingX = 10.0;
+      const paddingY = 2.0;
+      const borderRadius = 8.0;
 
       // Draw tooltip for the minimum value
       final textSpan = TextSpan(
-        text: minText,
+        text: '$minValue',
         style: const TextStyle(
             color: Colors.black, fontSize: 12, backgroundColor: Colors.white),
       );
       textPainter.text = textSpan;
       textPainter.layout();
-      final textX = minX + 10;
-      final textY = y2 - minValue * yStep - 10;
-      textPainter.paint(canvas, Offset(textX, textY));
+      final textX = minX + paddingX + 5;
+      final textY = y2 - minValue * yStep - paddingY - 10;
 
+      final Rect rect1 = Rect.fromPoints(
+        Offset(textX - paddingX, textY - paddingY),
+        Offset(textX + textPainter.width + paddingX,
+            textY + textPainter.height + paddingY),
+      );
+      final RRect rrect1 =
+          RRect.fromRectAndRadius(rect1, const Radius.circular(borderRadius));
+      canvas.drawRRect(rrect1, minMaxToolTipPaint);
+      textPainter.paint(canvas, Offset(textX, textY));
       // Draw tooltip for the maximum value
       final textSpanMax = TextSpan(
-        text: maxText,
-        style: const TextStyle(
-            color: Colors.black, fontSize: 12, backgroundColor: Colors.white),
+        text: '$maxValue',
+        style: const TextStyle(color: Colors.black, fontSize: 12),
       );
+
       textPainter.text = textSpanMax;
       textPainter.layout();
-      final textXMax = maxX;
-      final textYMax = y2 - maxValue * yStep - 10;
+      final textXMax = maxX + paddingX + 10;
+      final textYMax = y2 - maxValue * yStep - paddingY - 12;
+
+      final Rect rect2 = Rect.fromPoints(
+        Offset(textXMax - paddingX, textYMax - paddingY),
+        Offset(textXMax + textPainter.width + paddingX,
+            textYMax + textPainter.height + paddingY),
+      );
+      final RRect rrect2 =
+          RRect.fromRectAndRadius(rect2, const Radius.circular(borderRadius));
+      canvas.drawRRect(rrect2, minMaxToolTipPaint);
       textPainter.paint(canvas, Offset(textXMax, textYMax));
 
+      // Min-Max Tooltip end
     }
-
-
 
     // Selected Tooltip
     if (selectedHour != 200 && isTouched) {
@@ -375,7 +395,7 @@ class ChartPainter extends CustomPainter {
         minWidth: 0,
         maxWidth: constraints[2] - constraints[0],
       );
-      final double padding = 8.0;
+      const padding = 8.0;
 
       // Position the text and draw it on the canvas
       final offsetValue = Offset(
