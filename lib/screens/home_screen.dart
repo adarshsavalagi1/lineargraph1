@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../components/EmptyWidget.dart';
 import '../data/graph_point.dart';
 import '/components/chart_painter.dart';
 
@@ -45,13 +46,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               padding: const EdgeInsets.symmetric(
                                   vertical: 10, horizontal: 3),
                               height: 200,
-                              child: CustomPaint(
+                              child:  emptyData.isNotEmpty? CustomPaint(
                                 size: Size.infinite,
                                 painter: ChartPainter(
                                     gPoints: actualData,
                                     selectedHour: _selectedHour,
                                     isTouched: _isTouched),
-                              ),
+                              ):const EmptyWidget(),
                             ),
                           ),
                         ],

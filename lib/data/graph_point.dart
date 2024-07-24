@@ -1,10 +1,12 @@
 
 
+
 class Graphpoint {
   final double min;
-  final double max;
-  final double median;
+  final int max;
+  final int median;
   final int hour;
+
 
   Graphpoint(this.min, this.max, this.median, this.hour);
 }
@@ -57,6 +59,7 @@ List<Graphpoint> dummyData = [
   Graphpoint(35, 45, 40, 47),
 ];
 
+List<Graphpoint> emptyData=[];
 
 List<Graphpoint> actualData = [
   // Graphpoint(29, 92, 53, 0),
