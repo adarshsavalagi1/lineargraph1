@@ -383,7 +383,7 @@ class ChartPainter extends CustomPainter {
 
       final textSpanDateTime = TextSpan(
         text:
-            '${intl.DateFormat.yMMMd().format(DateTime.now())} ${selectedPoint.hour}:00PM',
+            '${intl.DateFormat.yMMMd().format(DateTime.now())} ${convertIndexToTime(selectedPoint.hour)}',
         style: const TextStyle(
           fontWeight: FontWeight.normal,
           fontSize: 9.0,
@@ -424,6 +424,27 @@ class ChartPainter extends CustomPainter {
           padding + textPainterValue.height + constraints[1]);
       textPainterDateTime.paint(canvas, offsetDateTime);
     }
+  }
+
+
+  String convertIndexToTime(int index) {
+    if (index < 0 || index > 47) {
+      throw ArgumentError("Index must be between 0 and 47");
+    }
+
+    int hours = index ~/ 2;
+    int minutes = (index % 2) * 30;
+
+    String period = hours < 12 ? "AM" : "PM";
+
+    int displayHour = hours % 12;
+    if (displayHour == 0) {
+      displayHour = 12;
+    }
+
+    String minutesStr = minutes == 0 ? "00" : "30";
+
+    return "$displayHour:$minutesStr $period";
   }
 
   @override
