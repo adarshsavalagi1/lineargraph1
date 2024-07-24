@@ -346,12 +346,18 @@ class ChartPainter extends CustomPainter {
       final paint = Paint()
         ..color = Colors.white
         ..style = PaintingStyle.fill;
-
-      final newX = selectedHour <= 8
+      final dx = gPoints
+          .reduce((a, b) =>
+              (a.hour - selectedHour).abs() < (b.hour - selectedHour).abs()
+                  ? a
+                  : b)
+          .hour;
+      final newX = dx <= 8
           ? 0
-          : selectedHour >= 40
+          : dx >= 40
               ? 32
-              : selectedHour - 8;
+              : dx - 8;
+
       final constraints = [
         0.0 + (newX * xStep),
         -50.0,
