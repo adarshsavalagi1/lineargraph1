@@ -8,12 +8,15 @@ import 'package:lineargraph/data/graph_point.dart';
 class ChartPainter extends CustomPainter {
   final List<Graphpoint> gPoints;
   final int selectedHour;
+  final bool isTouched;
 
-  ChartPainter({required this.gPoints, required this.selectedHour});
+  ChartPainter(
+      {required this.gPoints,
+      required this.selectedHour,
+      required this.isTouched});
 
   @override
   void paint(Canvas canvas, Size size) {
-    // defining paint start
     // Lines paint
     final graphLinePaint = Paint()
       ..color = Colors.red
@@ -109,7 +112,7 @@ class ChartPainter extends CustomPainter {
     // 3. dots along x axis
 
     final List<Offset> Xpoints1 = List.generate(24, (i) {
-      if (i  % 6 == 0) {
+      if (i % 6 == 0) {
         return Offset(0, size.height);
       }
       final x = i * xStep * 2;
@@ -118,7 +121,7 @@ class ChartPainter extends CustomPainter {
     canvas.drawPoints(PointMode.points, Xpoints1, dotPaint1);
 
     final List<Offset> Xpoints2 = List.generate(24, (i) {
-      if (i  % 6 != 0) {
+      if (i % 6 != 0) {
         return Offset(0, size.height);
       }
       final x = i * xStep * 2;
@@ -213,33 +216,13 @@ class ChartPainter extends CustomPainter {
     // 6. mark the selected Line
     bool selectedHourPresent =
         gPoints.where((gp) => gp.hour == selectedHour).isNotEmpty;
-    if (selectedHourPresent) {
-      const double dashHeight = 5.0;
-      const double dashSpace = 3.0;
-      double startY = x1;
-      final dx = selectedHour * xStep;
-
-      while (startY < y2) {
-        canvas.drawLine(
-          Offset(dx, startY),
-          Offset(dx, startY + dashHeight),
-          selectedLinePaint,
-        );
-        startY += dashHeight + dashSpace;
-      }
-    } else {
-      // calculate nearest point
-      if (selectedHour != 200) {
-        final dx = gPoints
-                .reduce((a, b) => (a.hour - selectedHour).abs() <
-                        (b.hour - selectedHour).abs()
-                    ? a
-                    : b)
-                .hour *
-            xStep;
+    if (isTouched) {
+      if (selectedHourPresent) {
         const double dashHeight = 5.0;
         const double dashSpace = 3.0;
-        double startY = 0.0;
+        double startY = x1;
+        final dx = selectedHour * xStep;
+
         while (startY < y2) {
           canvas.drawLine(
             Offset(dx, startY),
@@ -248,48 +231,85 @@ class ChartPainter extends CustomPainter {
           );
           startY += dashHeight + dashSpace;
         }
+      } else {
+        // calculate nearest point
+        if (selectedHour != 200) {
+          final dx = gPoints
+                  .reduce((a, b) => (a.hour - selectedHour).abs() <
+                          (b.hour - selectedHour).abs()
+                      ? a
+                      : b)
+                  .hour *
+              xStep;
+          const double dashHeight = 5.0;
+          const double dashSpace = 3.0;
+          double startY = 0.0;
+          while (startY < y2) {
+            canvas.drawLine(
+              Offset(dx, startY),
+              Offset(dx, startY + dashHeight),
+              selectedLinePaint,
+            );
+            startY += dashHeight + dashSpace;
+          }
+        }
       }
+    } else {
+      final dx = DateTime.now().hour * xStep * 2;
+      const double dashHeight = 5.0;
+      const double dashSpace = 3.0;
+      double startY = 0.0;
+      while (startY < y2) {
+        canvas.drawLine(
+          Offset(dx, startY),
+          Offset(dx, startY + dashHeight),
+          selectedLinePaint,
+        );
+        startY += dashHeight + dashSpace;
+      }
+    // Find the smallest and largest values in dataPoints
+      int minValue = gPoints.map((gp) => gp.min).reduce(min).toInt();
+      int maxValue = gPoints.map((gp) => gp.max).reduce(max).toInt();
+
+      // Find their corresponding points
+      final minIndex = gPoints.where((gp) => gp.min == minValue).first.hour;
+      final maxIndex = gPoints.where((gp) => gp.max == maxValue).first.hour;
+      final minX = minIndex * xStep;
+      final maxX = maxIndex * xStep;
+
+      final minText = '$minValue';
+      final maxText = '$maxValue';
+
+      // Draw tooltip for the minimum value
+      final textSpan = TextSpan(
+        text: minText,
+        style: const TextStyle(
+            color: Colors.black, fontSize: 12, backgroundColor: Colors.white),
+      );
+      textPainter.text = textSpan;
+      textPainter.layout();
+      final textX = minX + 10;
+      final textY = y2 - minValue * yStep - 10;
+      textPainter.paint(canvas, Offset(textX, textY));
+
+      // Draw tooltip for the maximum value
+      final textSpanMax = TextSpan(
+        text: maxText,
+        style: const TextStyle(
+            color: Colors.black, fontSize: 12, backgroundColor: Colors.white),
+      );
+      textPainter.text = textSpanMax;
+      textPainter.layout();
+      final textXMax = maxX;
+      final textYMax = y2 - maxValue * yStep - 10;
+      textPainter.paint(canvas, Offset(textXMax, textYMax));
+
     }
 
-    // Find the smallest and largest values in dataPoints
-    int minValue = gPoints.map((gp) => gp.min).reduce(min).toInt();
-    int maxValue = gPoints.map((gp) => gp.max).reduce(max).toInt();
 
-    // Find their corresponding points
-    final minIndex = gPoints.where((gp) => gp.min == minValue).first.hour;
-    final maxIndex = gPoints.where((gp) => gp.max == maxValue).first.hour;
-    final minX = minIndex * xStep;
-    final maxX = maxIndex * xStep;
-
-    final minText = '$minValue';
-    final maxText = '$maxValue';
-
-    // Draw tooltip for the minimum value
-    final textSpan = TextSpan(
-      text: minText,
-      style: const TextStyle(
-          color: Colors.black, fontSize: 12, backgroundColor: Colors.white),
-    );
-    textPainter.text = textSpan;
-    textPainter.layout();
-    final textX = minX + 10;
-    final textY = y2 - minValue * yStep - 10;
-    textPainter.paint(canvas, Offset(textX, textY));
-
-    // Draw tooltip for the maximum value
-    final textSpanMax = TextSpan(
-      text: maxText,
-      style: const TextStyle(
-          color: Colors.black, fontSize: 12, backgroundColor: Colors.white),
-    );
-    textPainter.text = textSpanMax;
-    textPainter.layout();
-    final textXMax = maxX;
-    final textYMax = y2 - maxValue * yStep - 10;
-    textPainter.paint(canvas, Offset(textXMax, textYMax));
 
     // Selected Tooltip
-    if (selectedHour != 200) {
+    if (selectedHour != 200 && isTouched) {
       final selectedPoint = gPoints.reduce((a, b) =>
           (a.hour - selectedHour).abs() < (b.hour - selectedHour).abs()
               ? a

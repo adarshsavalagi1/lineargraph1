@@ -11,7 +11,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedHour = 200;
-
+  bool _isTouched = false;
 
   @override
   Widget build(BuildContext context) {
@@ -45,12 +45,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               padding: const EdgeInsets.symmetric(
                                   vertical: 10, horizontal: 3),
                               height: 200,
-                              child:  CustomPaint(
+                              child: CustomPaint(
                                 size: Size.infinite,
                                 painter: ChartPainter(
-                                  gPoints: actualData,
-                                  selectedHour: _selectedHour,
-                                ),
+                                    gPoints: actualData,
+                                    selectedHour: _selectedHour,
+                                    isTouched: _isTouched),
                               ),
                             ),
                           ),
@@ -61,10 +61,33 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 GestureDetector(
                   onTapDown: (details) {
+                    setState(() {
+                      _isTouched = true;
+                    });
                     _handleTouch(details.localPosition, context);
                   },
                   onHorizontalDragUpdate: (details) {
                     _handleTouch(details.localPosition, context);
+                    setState(() {
+                      _isTouched = true;
+                    });
+                  },
+                  onTapUp: (details) {
+                    setState(() {
+                      _isTouched = false;
+                    });
+
+                  },
+                  onHorizontalDragEnd: (details) {
+                    setState(() {
+                      _isTouched = false;
+                    });
+
+                  },
+                  onTapCancel: () {
+                    setState(() {
+                      _isTouched = false;
+                    });
                   },
                   child: Container(
                     width: double.infinity,
