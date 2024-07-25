@@ -1,12 +1,8 @@
-
-
-
 class Graphpoint {
   final double min;
   final int max;
   final int median;
   final int hour;
-
 
   Graphpoint(this.min, this.max, this.median, this.hour);
 }
@@ -59,7 +55,7 @@ List<Graphpoint> dummyData = [
   Graphpoint(35, 45, 40, 47),
 ];
 
-List<Graphpoint> emptyData=[];
+List<Graphpoint> emptyData = [];
 
 List<Graphpoint> actualData = [
   // Graphpoint(29, 92, 53, 0),
@@ -126,18 +122,18 @@ List<Graphpoint> newSetData = [
   // Graphpoint(20, 130, 25, 14),
   // Graphpoint(10, 20, 15, 15),
   // Graphpoint(5, 15, 10, 16),
-  Graphpoint(25,  70,35, 17),
-  Graphpoint(15, 77,25,  18),
-  Graphpoint(35,  75,45, 19),
-  Graphpoint(40,  82,50, 20),
-  Graphpoint(30,  85,40, 21),
-  Graphpoint(20,  83,30, 22),
-  Graphpoint(10, 86,20,  23),
-  Graphpoint(5, 89,15,  24),
-  Graphpoint(25,  91,35, 25),
-  Graphpoint(15,  95,25, 26),
+  Graphpoint(25, 70, 35, 17),
+  Graphpoint(15, 77, 25, 18),
+  Graphpoint(35, 75, 45, 19),
+  Graphpoint(40, 82, 50, 20),
+  Graphpoint(30, 85, 40, 21),
+  Graphpoint(20, 83, 30, 22),
+  Graphpoint(10, 86, 20, 23),
+  Graphpoint(5, 89, 15, 24),
+  Graphpoint(25, 91, 35, 25),
+  Graphpoint(15, 95, 25, 26),
   Graphpoint(56, 101, 98, 27),
-  Graphpoint(94, 96,98,  28),
+  Graphpoint(94, 96, 98, 28),
   Graphpoint(23, 101, 98, 29),
   Graphpoint(94, 98, 98, 30),
   Graphpoint(91, 100, 98, 31),
@@ -154,4 +150,19 @@ List<Graphpoint> newSetData = [
   // Graphpoint(15, 120, 75, 42),
   // Graphpoint(35, 45, 40, 43),
   // Graphpoint(35, 45, 40, 47),
+];
+
+List<Graphpoint> staticGraph = [
+  Graphpoint(5,  89,15, 24),
+  Graphpoint(25,  91,35, 25),
+  Graphpoint(15,  95,25, 26),
+  Graphpoint(56, 101, 98, 27),
+  Graphpoint(94, 103, 98, 40),
+  Graphpoint(35, 45, 40, 37),
+  Graphpoint(40, 101, 45, 36),
+  Graphpoint(94, 98, 96, 28),
+  Graphpoint(23, 101, 98, 29),
+  Graphpoint(94, 98, 98, 30),
+  Graphpoint(91, 101, 98, 31),
+  Graphpoint(94, 101, 98, 32),
 ];
