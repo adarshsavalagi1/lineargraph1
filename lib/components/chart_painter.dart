@@ -9,11 +9,13 @@ class ChartPainter extends CustomPainter {
   final List<Graphpoint> gPoints;
   final int selectedHour;
   final bool isTouched;
+  final bool isToday;
 
   ChartPainter(
       {required this.gPoints,
       required this.selectedHour,
-      required this.isTouched});
+      required this.isTouched,
+      required this.isToday});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -143,7 +145,7 @@ class ChartPainter extends CustomPainter {
       ..strokeWidth = 2.0;
 
     final Paint minMaxToolTipPaint = Paint()
-      ..color = Colors.white
+      ..color = Colors.black
       ..style = PaintingStyle.fill;
 
     bool selectedHourPresent =
@@ -187,6 +189,24 @@ class ChartPainter extends CustomPainter {
         }
       }
     } else {
+      if (isToday) {
+        const double dashHeight = 5.0;
+        const double dashSpace = 3.0;
+        double startY = x1;
+        final dx =
+            (DateTime.now().hour * 2 + (DateTime.now().minute >= 30 ? 1 : 0)) *
+                xStep;
+
+        while (startY < y2) {
+          canvas.drawLine(
+            Offset(dx, startY),
+            Offset(dx, startY + dashHeight),
+            selectedLinePaint,
+          );
+          startY += dashHeight + dashSpace;
+        }
+      }
+
       // Min-Max Tooltip start
       int minValue = gPoints.map((gp) => gp.min).reduce(min).toInt();
       int maxValue = gPoints.map((gp) => gp.max).reduce(max).toInt();
@@ -205,7 +225,7 @@ class ChartPainter extends CustomPainter {
       final textSpan = TextSpan(
         text: '$minValue',
         style: const TextStyle(
-            color: Colors.black, fontSize: 12, backgroundColor: Colors.white),
+            color: Colors.white, fontSize: 12, backgroundColor: Colors.black),
       );
       textPainter.text = textSpan;
       textPainter.layout();
@@ -224,7 +244,8 @@ class ChartPainter extends CustomPainter {
       // Draw tooltip for the maximum value
       final textSpanMax = TextSpan(
         text: '$maxValue',
-        style: const TextStyle(color: Colors.black, fontSize: 12),
+        style: const TextStyle(
+            color: Colors.white, backgroundColor: Colors.black, fontSize: 12),
       );
 
       textPainter.text = textSpanMax;
@@ -263,6 +284,7 @@ class ChartPainter extends CustomPainter {
       ..color = Colors.black
       ..strokeWidth = 2.0
       ..style = PaintingStyle.fill;
+
     final textPainter = TextPainter(
         textAlign: TextAlign.center, textDirection: TextDirection.ltr);
 
@@ -312,7 +334,7 @@ class ChartPainter extends CustomPainter {
     });
     canvas.drawPoints(PointMode.points, Xpoints1, dotPaint1);
 
-    final List<Offset> Xpoints2 = List.generate(24, (i) {
+    final List<Offset> Xpoints2 = List.generate(25, (i) {
       if (i % 6 != 0) {
         return Offset(0, size.height);
       }
@@ -320,7 +342,14 @@ class ChartPainter extends CustomPainter {
       return Offset(x, size.height);
     });
 
+
+    // dark lines
     canvas.drawPoints(PointMode.points, Xpoints2, dotPaint2);
+    // dark lines
+    canvas.drawPoints(PointMode.points,
+        Xpoints2.map((xp) => Offset(xp.dx, xp.dy - 2)).toList(), dotPaint2);
+
+
 
     //  4.   Draw x-axis labels
     const xLabels = ['12 AM', '6 AM', '12 PM', '6 PM', '12 AM'];
@@ -344,7 +373,7 @@ class ChartPainter extends CustomPainter {
               ? a
               : b);
       final paint = Paint()
-        ..color = Colors.white
+        ..color = Colors.black
         ..style = PaintingStyle.fill;
       final dx = gPoints
           .reduce((a, b) =>
@@ -362,7 +391,7 @@ class ChartPainter extends CustomPainter {
         0.0 + (newX * xStep),
         -50.0,
         100.0 + (newX * xStep),
-        0.0
+        -10.0
       ];
       final rect = RRect.fromLTRBR(
         constraints[0],
@@ -377,7 +406,7 @@ class ChartPainter extends CustomPainter {
         style: const TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 15.0,
-          color: Colors.black,
+          color: Colors.white,
         ),
       );
 
@@ -387,7 +416,7 @@ class ChartPainter extends CustomPainter {
         style: const TextStyle(
           fontWeight: FontWeight.normal,
           fontSize: 9.0,
-          color: Colors.black,
+          color: Colors.white,
         ),
       );
 
@@ -425,7 +454,6 @@ class ChartPainter extends CustomPainter {
       textPainterDateTime.paint(canvas, offsetDateTime);
     }
   }
-
 
   String convertIndexToTime(int index) {
     if (index < 0 || index > 47) {

@@ -46,13 +46,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               padding: const EdgeInsets.symmetric(
                                   vertical: 10, horizontal: 3),
                               height: 200,
-                              child:  newSetData.isNotEmpty? CustomPaint(
-                                size: Size.infinite,
-                                painter: ChartPainter(
-                                    gPoints: newSetData,
-                                    selectedHour: _selectedHour,
-                                    isTouched: _isTouched),
-                              ):const EmptyWidget(),
+                              child: newSetData.isNotEmpty
+                                  ? CustomPaint(
+                                      size: Size.infinite,
+                                      painter: ChartPainter(
+                                          gPoints: newSetData,
+                                          isToday: true,
+                                          selectedHour: _selectedHour,
+                                          isTouched: _isTouched),
+                                    )
+                                  : const EmptyWidget(),
                             ),
                           ),
                         ],
@@ -77,13 +80,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     setState(() {
                       _isTouched = false;
                     });
-
                   },
                   onHorizontalDragEnd: (details) {
                     setState(() {
                       _isTouched = false;
                     });
-
                   },
                   onTapCancel: () {
                     setState(() {
@@ -111,7 +112,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   int _getHourIndex(Offset position, BuildContext context) {
-    final double graphWidth = MediaQuery.of(context).size.width - 32;
+    final double graphWidth = MediaQuery.of(context).size.width -
+        MediaQuery.of(context).size.width * 0.15 -
+        32 -
+        6;
     const hoursInDay = 48;
     final double stepX = graphWidth / hoursInDay;
     return (position.dx / stepX).round().clamp(0, hoursInDay - 1);
