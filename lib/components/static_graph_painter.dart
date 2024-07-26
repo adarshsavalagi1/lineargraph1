@@ -9,22 +9,88 @@ class StaticGraphPainter extends CustomPainter {
   final List<String> hours;
   final List<Graphpoint> gPoints;
 
-  StaticGraphPainter( {required this.hours, required this.gPoints});
+  StaticGraphPainter({required this.hours, required this.gPoints});
 
   @override
   void paint(Canvas canvas, Size size) {
     const x1 = 0.0;
-    final x2 = size.width ;
+    final x2 = size.width;
     const y1 = 0.0;
     final y2 = size.height;
     final xStep = (x2 - x1) / 11;
     final yStep = (y2 - y1) / 140;
-
     constructGraph(canvas, size);
     plotGraph(canvas, xStep, yStep, y1, y2);
+    minMaxToolTip(canvas, xStep, yStep, y2);
   }
 
-  void plotGraph(Canvas canvas,double xStep,double yStep,double y1,double y2){
+  void minMaxToolTip(Canvas canvas, double xStep, double yStep, double y2) {
+    final Paint minMaxToolTipPaint = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.fill;
+    final textPainter = TextPainter(
+        textAlign: TextAlign.center, textDirection: TextDirection.ltr);
+    // Min-Max Tooltip start
+    int minValue = gPoints.map((gp) => gp.min).reduce(min).toInt();
+    int maxValue = gPoints.map((gp) => gp.max).reduce(max).toInt();
+    final minHour = gPoints.map((gp) => gp.hour).reduce(min).toInt();
+    // Find their corresponding points
+    final minIndex = gPoints.where((gp) => gp.min == minValue).first.hour;
+    final maxIndex = gPoints.where((gp) => gp.max == maxValue).first.hour;
+    final minX = (minIndex - minHour) * xStep;
+    final maxX = (maxIndex - minHour) * xStep;
+
+    const paddingX = 10.0;
+    const paddingY = 2.0;
+    const borderRadius = 8.0;
+
+    // Draw tooltip for the minimum value
+    final textSpan = TextSpan(
+      text: '$minValue',
+      style: const TextStyle(
+          color: Colors.white, fontSize: 12, backgroundColor: Colors.black),
+    );
+    textPainter.text = textSpan;
+    textPainter.layout();
+    final textX = minX-paddingX ;
+    final textY = y2 - minValue * yStep - paddingY -30;
+
+    final Rect rect1 = Rect.fromPoints(
+      Offset(textX - paddingX, textY - paddingY),
+      Offset(textX + textPainter.width + paddingX,
+          textY + textPainter.height + paddingY),
+    );
+    final RRect rrect1 =
+        RRect.fromRectAndRadius(rect1, const Radius.circular(borderRadius));
+    canvas.drawRRect(rrect1, minMaxToolTipPaint);
+    textPainter.paint(canvas, Offset(textX, textY));
+    // Draw tooltip for the maximum value
+    final textSpanMax = TextSpan(
+      text: '$maxValue',
+      style: const TextStyle(
+          color: Colors.white, backgroundColor: Colors.black, fontSize: 12),
+    );
+
+    textPainter.text = textSpanMax;
+    textPainter.layout();
+    final textXMax = maxX + paddingX + 10;
+    final textYMax = y2 - maxValue * yStep - paddingY - 12;
+
+    final Rect rect2 = Rect.fromPoints(
+      Offset(textXMax - paddingX, textYMax - paddingY),
+      Offset(textXMax + textPainter.width + paddingX,
+          textYMax + textPainter.height + paddingY),
+    );
+    final RRect rrect2 =
+        RRect.fromRectAndRadius(rect2, const Radius.circular(borderRadius));
+    canvas.drawRRect(rrect2, minMaxToolTipPaint);
+    textPainter.paint(canvas, Offset(textXMax, textYMax));
+
+    // Min-Max Tooltip end
+  }
+
+  void plotGraph(
+      Canvas canvas, double xStep, double yStep, double y1, double y2) {
     final shadedPaint = Paint()
       ..color = Colors.red.withOpacity(0.3)
       ..style = PaintingStyle.fill;
@@ -38,18 +104,17 @@ class StaticGraphPainter extends CustomPainter {
       ..color = Colors.red.withOpacity(0.3)
       ..style = PaintingStyle.stroke;
 
-
     gPoints.sort((a, b) => a.hour.compareTo(b.hour));
 
     final List<Offset> medianPoints = [];
     final List<Offset> minPoints = [];
     final List<Offset> maxPoints = [];
-    final minHour = gPoints.map((gp)=>gp.hour).reduce(min).toInt();
+    final minHour = gPoints.map((gp) => gp.hour).reduce(min).toInt();
 
     for (int i = 0; i < gPoints.length; i++) {
       final gp = gPoints[i];
 
-      final x = (gp.hour-minHour) * xStep;
+      final x = (gp.hour - minHour) * xStep;
       print(x);
       final yMedian = y2 - yStep * gp.median;
       final yMin = y2 - yStep * gp.min;
@@ -120,6 +185,7 @@ class StaticGraphPainter extends CustomPainter {
       }
     }
   }
+
   void constructGraph(Canvas canvas, Size size) {
     final linePaint = Paint()
       ..color = Colors.black
