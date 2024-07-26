@@ -153,16 +153,16 @@ List<Graphpoint> newSetData = [
 ];
 
 List<Graphpoint> staticGraph = [
-  Graphpoint(5, 89, 15, 13),
-  Graphpoint(25, 91, 35, 2),
-  Graphpoint(15, 95, 25, 3),
-  Graphpoint(56, 101, 98, 4),
+  Graphpoint(25, 91, 0, 2),
+  Graphpoint(15, 95, 60, 3),
+  Graphpoint(56, 101, 70, 4),
   Graphpoint(94, 103, 98, 5),
-  // Graphpoint(35, 45, 40, 6),
-  Graphpoint(40, 101, 45, 7),
-  // Graphpoint(94, 98, 96, 8),
+  Graphpoint(35, 45, 40, 6),
+  Graphpoint(40, 101, 50, 7),
+  Graphpoint(94, 98, 0, 8),
   Graphpoint(23, 101, 98, 9),
   Graphpoint(94, 98, 98, 10),
   Graphpoint(91, 101, 98, 11),
   Graphpoint(94, 101, 98, 12),
+  Graphpoint(5, 89, 80, 13),
 ];

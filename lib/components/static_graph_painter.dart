@@ -30,13 +30,22 @@ class StaticGraphPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     final textPainter = TextPainter(
         textAlign: TextAlign.center, textDirection: TextDirection.ltr);
+
+    // Filter out points with a median of zero
+    final filteredPoints = gPoints.where((gp) => gp.median != 0).toList();
+
+    if (filteredPoints.isEmpty) {
+      return; // If no points remain after filtering, exit the function
+    }
+
     // Min-Max Tooltip start
-    int minValue = gPoints.map((gp) => gp.min).reduce(min).toInt();
-    int maxValue = gPoints.map((gp) => gp.max).reduce(max).toInt();
-    final minHour = gPoints.map((gp) => gp.hour).reduce(min).toInt();
+    int minValue = filteredPoints.map((gp) => gp.min).reduce(min).toInt();
+    int maxValue = filteredPoints.map((gp) => gp.max).reduce(max).toInt();
+    final minHour = filteredPoints.map((gp) => gp.hour).reduce(min).toInt();
+
     // Find their corresponding points
-    final minIndex = gPoints.where((gp) => gp.min == minValue).first.hour;
-    final maxIndex = gPoints.where((gp) => gp.max == maxValue).first.hour;
+    final minIndex = filteredPoints.where((gp) => gp.min == minValue).first.hour;
+    final maxIndex = filteredPoints.where((gp) => gp.max == maxValue).first.hour;
     final minX = (minIndex - minHour) * xStep;
     final maxX = (maxIndex - minHour) * xStep;
 
@@ -52,8 +61,8 @@ class StaticGraphPainter extends CustomPainter {
     );
     textPainter.text = textSpan;
     textPainter.layout();
-    final textX = minX-paddingX ;
-    final textY = y2 - minValue * yStep - paddingY -30;
+    final textX = minX - paddingX;
+    final textY = y2 - minValue * yStep - paddingY - 30;
 
     final Rect rect1 = Rect.fromPoints(
       Offset(textX - paddingX, textY - paddingY),
@@ -61,9 +70,10 @@ class StaticGraphPainter extends CustomPainter {
           textY + textPainter.height + paddingY),
     );
     final RRect rrect1 =
-        RRect.fromRectAndRadius(rect1, const Radius.circular(borderRadius));
+    RRect.fromRectAndRadius(rect1, const Radius.circular(borderRadius));
     canvas.drawRRect(rrect1, minMaxToolTipPaint);
     textPainter.paint(canvas, Offset(textX, textY));
+
     // Draw tooltip for the maximum value
     final textSpanMax = TextSpan(
       text: '$maxValue',
@@ -82,15 +92,15 @@ class StaticGraphPainter extends CustomPainter {
           textYMax + textPainter.height + paddingY),
     );
     final RRect rrect2 =
-        RRect.fromRectAndRadius(rect2, const Radius.circular(borderRadius));
+    RRect.fromRectAndRadius(rect2, const Radius.circular(borderRadius));
     canvas.drawRRect(rrect2, minMaxToolTipPaint);
     textPainter.paint(canvas, Offset(textXMax, textYMax));
 
     // Min-Max Tooltip end
   }
 
-  void plotGraph(
-      Canvas canvas, double xStep, double yStep, double y1, double y2) {
+
+  void plotGraph(Canvas canvas, double xStep, double yStep, double y1, double y2) {
     final shadedPaint = Paint()
       ..color = Colors.red.withOpacity(0.3)
       ..style = PaintingStyle.fill;
@@ -109,82 +119,91 @@ class StaticGraphPainter extends CustomPainter {
     final List<Offset> medianPoints = [];
     final List<Offset> minPoints = [];
     final List<Offset> maxPoints = [];
-    final minHour = gPoints.map((gp) => gp.hour).reduce(min).toInt();
+    final minHour = gPoints.map((gp) => gp.hour).reduce(min);
 
     for (int i = 0; i < gPoints.length; i++) {
       final gp = gPoints[i];
 
       final x = (gp.hour - minHour) * xStep;
-      print(x);
       final yMedian = y2 - yStep * gp.median;
       final yMin = y2 - yStep * gp.min;
       final yMax = y2 - yStep * gp.max;
 
-      // Draw the point for median
-      canvas.drawPoints(PointMode.points, [Offset(x, yMedian)], graphLinePaint);
+      if (gp.median != 0) {
+        // Draw the point for median
+        canvas.drawPoints(PointMode.points, [Offset(x, yMedian)], graphLinePaint);
 
-      // Draw the point for min
-      canvas.drawPoints(PointMode.points, [Offset(x, yMin)], minMaxLinePaint);
+        // Draw the point for min
+        canvas.drawPoints(PointMode.points, [Offset(x, yMin)], minMaxLinePaint);
 
-      // Draw the point for max
-      canvas.drawPoints(PointMode.points, [Offset(x, yMax)], minMaxLinePaint);
+        // Draw the point for max
+        canvas.drawPoints(PointMode.points, [Offset(x, yMax)], minMaxLinePaint);
+      }
 
       medianPoints.add(Offset(x, yMedian));
       minPoints.add(Offset(x, yMin));
       maxPoints.add(Offset(x, yMax));
 
       // Draw cubic Bezier curves and shade only between consecutive points
-      if (i > 0 && gp.hour == gPoints[i - 1].hour + 1) {
-        // Shading between consecutive min and max points
-        final shadedPath = Path();
-        final prevMin = minPoints[i - 1];
-        final currentMin = minPoints[i];
-        final prevMax = maxPoints[i - 1];
-        final currentMax = maxPoints[i];
+      if (medianPoints.length > 1) {
+        final prevHour = gPoints[i - 1].hour;
+        final currentHour = gp.hour;
 
-        shadedPath.moveTo(prevMin.dx, prevMin.dy);
-        shadedPath.lineTo(currentMin.dx, currentMin.dy);
-        shadedPath.lineTo(currentMax.dx, currentMax.dy);
-        shadedPath.lineTo(prevMax.dx, prevMax.dy);
-        shadedPath.close();
+        if (prevHour == currentHour - 1 && gPoints[i - 1].median != 0 && gp.median != 0) {
+          // Shading between consecutive min and max points
+          final shadedPath = Path();
+          final prevMin = minPoints[minPoints.length - 2];
+          final currentMin = minPoints.last;
+          final prevMax = maxPoints[maxPoints.length - 2];
+          final currentMax = maxPoints.last;
 
-        canvas.drawPath(shadedPath, shadedPaint);
+          shadedPath.moveTo(prevMin.dx, prevMin.dy);
+          shadedPath.lineTo(currentMin.dx, currentMin.dy);
+          shadedPath.lineTo(currentMax.dx, currentMax.dy);
+          shadedPath.lineTo(prevMax.dx, prevMax.dy);
+          shadedPath.close();
 
-        // for median
-        final p1 = medianPoints[i - 1];
-        final p2 = medianPoints[i];
-        final controlPoint1 = Offset((p1.dx + p2.dx) / 2, p1.dy);
-        final controlPoint2 = Offset((p1.dx + p2.dx) / 2, p2.dy);
-        final path = Path()
-          ..moveTo(p1.dx, p1.dy)
-          ..cubicTo(controlPoint1.dx, controlPoint1.dy, controlPoint2.dx,
-              controlPoint2.dy, p2.dx, p2.dy);
-        canvas.drawPath(path, graphLinePaint);
+          canvas.drawPath(shadedPath, shadedPaint);
 
-        // for min
-        final pm1 = minPoints[i - 1];
-        final pm2 = minPoints[i];
-        final minPoint1 = Offset((pm1.dx + pm2.dx) / 2, pm1.dy);
-        final minPoint2 = Offset((pm1.dx + pm2.dx) / 2, pm2.dy);
-        final minPath = Path()
-          ..moveTo(pm1.dx, pm1.dy)
-          ..cubicTo(minPoint1.dx, minPoint1.dy, minPoint2.dx, minPoint2.dy,
-              pm2.dx, pm2.dy);
-        canvas.drawPath(minPath, minMaxLinePaint);
+          // for median
+          final p1 = medianPoints[medianPoints.length - 2];
+          final p2 = medianPoints.last;
+          final controlPoint1 = Offset((p1.dx + p2.dx) / 2, p1.dy);
+          final controlPoint2 = Offset((p1.dx + p2.dx) / 2, p2.dy);
+          final path = Path()
+            ..moveTo(p1.dx, p1.dy)
+            ..cubicTo(controlPoint1.dx, controlPoint1.dy, controlPoint2.dx,
+                controlPoint2.dy, p2.dx, p2.dy);
+          canvas.drawPath(path, graphLinePaint);
 
-        // for max
-        final pmx1 = maxPoints[i - 1];
-        final pmx2 = maxPoints[i];
-        final maxPoint1 = Offset((pmx1.dx + pmx2.dx) / 2, pmx1.dy);
-        final maxPoint2 = Offset((pmx1.dx + pmx2.dx) / 2, pmx2.dy);
-        final maxPath = Path()
-          ..moveTo(pmx1.dx, pmx1.dy)
-          ..cubicTo(maxPoint1.dx, maxPoint1.dy, maxPoint2.dx, maxPoint2.dy,
-              pmx2.dx, pmx2.dy);
-        canvas.drawPath(maxPath, minMaxLinePaint);
+          // for min
+          final pm1 = minPoints[minPoints.length - 2];
+          final pm2 = minPoints.last;
+          final minPoint1 = Offset((pm1.dx + pm2.dx) / 2, pm1.dy);
+          final minPoint2 = Offset((pm1.dx + pm2.dx) / 2, pm2.dy);
+          final minPath = Path()
+            ..moveTo(pm1.dx, pm1.dy)
+            ..cubicTo(minPoint1.dx, minPoint1.dy, minPoint2.dx, minPoint2.dy,
+                pm2.dx, pm2.dy);
+          canvas.drawPath(minPath, minMaxLinePaint);
+
+          // for max
+          final pmx1 = maxPoints[maxPoints.length - 2];
+          final pmx2 = maxPoints.last;
+          final maxPoint1 = Offset((pmx1.dx + pmx2.dx) / 2, pmx1.dy);
+          final maxPoint2 = Offset((pmx1.dx + pmx2.dx) / 2, pmx2.dy);
+          final maxPath = Path()
+            ..moveTo(pmx1.dx, pmx1.dy)
+            ..cubicTo(maxPoint1.dx, maxPoint1.dy, maxPoint2.dx, maxPoint2.dy,
+                pmx2.dx, pmx2.dy);
+          canvas.drawPath(maxPath, minMaxLinePaint);
+        }
       }
     }
   }
+
+
+
 
   void constructGraph(Canvas canvas, Size size) {
     final linePaint = Paint()
