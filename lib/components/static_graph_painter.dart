@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -13,11 +14,12 @@ class StaticGraphPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     const x1 = 0.0;
-    final x2 = size.width - (size.width * 0.15);
+    final x2 = size.width ;
     const y1 = 0.0;
     final y2 = size.height;
-    final xStep = (x2 - x1) / 24;
+    final xStep = (x2 - x1) / 11;
     final yStep = (y2 - y1) / 140;
+
     constructGraph(canvas, size);
     plotGraph(canvas, xStep, yStep, y1, y2);
   }
@@ -42,10 +44,13 @@ class StaticGraphPainter extends CustomPainter {
     final List<Offset> medianPoints = [];
     final List<Offset> minPoints = [];
     final List<Offset> maxPoints = [];
+    final minHour = gPoints.map((gp)=>gp.hour).reduce(min).toInt();
 
     for (int i = 0; i < gPoints.length; i++) {
       final gp = gPoints[i];
-      final x = i * xStep;
+
+      final x = (gp.hour-minHour) * xStep;
+      print(x);
       final yMedian = y2 - yStep * gp.median;
       final yMin = y2 - yStep * gp.min;
       final yMax = y2 - yStep * gp.max;
