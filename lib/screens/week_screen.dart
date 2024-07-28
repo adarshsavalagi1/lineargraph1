@@ -1,26 +1,23 @@
 import 'package:flutter/material.dart';
-import '../components/EmptyWidget.dart';
-import '../data/graph_point.dart';
-import '/components/chart_painter.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+import '../components/week_painter.dart';
+
+class WeekScreen extends StatefulWidget {
+  const WeekScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<WeekScreen> createState() => _WeekScreenState();
 }
 
-
-
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedHour = 200;
+class _WeekScreenState extends State<WeekScreen> {
+  int _selectedWeek = 200;
   bool _isTouched = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Linear Graph"),
+        title: const Text("Week chart"),
       ),
       body: Container(
         margin: const EdgeInsets.all(16.0),
@@ -45,20 +42,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Expanded(
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10, horizontal: 3),
-                              height: 200,
-                              child: newSetData.isNotEmpty
-                                  ? CustomPaint(
-                                      size: Size.infinite,
-                                      painter: ChartPainter(
-                                          gPoints: newSetData,
-                                          isToday: true,
-                                          selectedHour: _selectedHour,
-                                          isTouched: _isTouched),
-                                    )
-                                  : const EmptyWidget(),
-                            ),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 10, horizontal: 3),
+                                height: 200,
+                                child: CustomPaint(
+                                  size: Size.infinite,
+                                  painter: WeekPainter(
+                                      isTouched: _isTouched,
+                                      weekIndex: _selectedWeek),
+                                )),
                           ),
                         ],
                       )
@@ -109,17 +101,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _handleTouch(Offset position, BuildContext context) {
     setState(() {
-      _selectedHour = _getHourIndex(position, context);
+      _selectedWeek = _getWeekIndex(position, context);
     });
   }
 
-  int _getHourIndex(Offset position, BuildContext context) {
+  int _getWeekIndex(Offset position, BuildContext context) {
     final double graphWidth = MediaQuery.of(context).size.width -
         MediaQuery.of(context).size.width * 0.15 -
         32 -
         6;
-    const hoursInDay = 48;
-    final double stepX = graphWidth / hoursInDay;
-    return (position.dx / stepX).round().clamp(0, hoursInDay - 1);
+    const weekCount = 7;
+    final double stepX = graphWidth / weekCount;
+    return (position.dx / stepX).round().clamp(0, weekCount - 1);
   }
 }

@@ -1,8 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:lineargraph/components/static_graph_painter.dart';
-
 import '../data/graph_point.dart';
 
 class StaticWidget extends StatefulWidget {
@@ -85,7 +82,9 @@ class _StaticWidgetState extends State<StaticWidget> {
                             child: Padding(
                               padding: const EdgeInsets.all(15.0),
                               child: CustomPaint(
-                                painter: StaticGraphPainter(hours: ['10AM','11AM','12PM','1PM'],gPoints: staticGraph),
+                                painter: StaticGraphPainter(
+                                    hours: ['10AM', '11AM', '12PM', '1PM'],
+                                    gPoints: staticGraph),
                               ),
                             ),
                           ),
