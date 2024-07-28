@@ -110,10 +110,6 @@ class StaticGraphPainter extends CustomPainter {
       ..strokeWidth = 3.0
       ..style = PaintingStyle.stroke;
 
-    final minMaxLinePaint = Paint()
-      ..color = Colors.red.withOpacity(0.3)
-      ..style = PaintingStyle.stroke;
-
     gPoints.sort((a, b) => a.hour.compareTo(b.hour));
 
     final List<Offset> medianPoints = [];
@@ -123,21 +119,13 @@ class StaticGraphPainter extends CustomPainter {
 
     for (int i = 0; i < gPoints.length; i++) {
       final gp = gPoints[i];
-
       final x = (gp.hour - minHour) * xStep;
       final yMedian = y2 - yStep * gp.median;
       final yMin = y2 - yStep * gp.min;
       final yMax = y2 - yStep * gp.max;
 
       if (gp.median != 0) {
-        // Draw the point for median
         canvas.drawPoints(PointMode.points, [Offset(x, yMedian)], graphLinePaint);
-
-        // Draw the point for min
-        canvas.drawPoints(PointMode.points, [Offset(x, yMin)], minMaxLinePaint);
-
-        // Draw the point for max
-        canvas.drawPoints(PointMode.points, [Offset(x, yMax)], minMaxLinePaint);
       }
 
       medianPoints.add(Offset(x, yMedian));
@@ -157,10 +145,30 @@ class StaticGraphPainter extends CustomPainter {
           final prevMax = maxPoints[maxPoints.length - 2];
           final currentMax = maxPoints.last;
 
+          // Move to the previous min point
           shadedPath.moveTo(prevMin.dx, prevMin.dy);
-          shadedPath.lineTo(currentMin.dx, currentMin.dy);
+
+          // Draw a cubic Bezier curve to the current min point
+          shadedPath.cubicTo(
+              (prevMin.dx + currentMin.dx) / 2,
+              prevMin.dy,
+              (prevMin.dx + currentMin.dx) / 2,
+              currentMin.dy,
+              currentMin.dx,
+              currentMin.dy);
+
+          // Draw a line to the current max point
           shadedPath.lineTo(currentMax.dx, currentMax.dy);
-          shadedPath.lineTo(prevMax.dx, prevMax.dy);
+
+          // Draw a cubic Bezier curve back to the previous max point
+          shadedPath.cubicTo(
+              (prevMax.dx + currentMax.dx) / 2,
+              currentMax.dy,
+              (prevMax.dx + currentMax.dx) / 2,
+              prevMax.dy,
+              prevMax.dx,
+              prevMax.dy);
+
           shadedPath.close();
 
           canvas.drawPath(shadedPath, shadedPaint);
@@ -176,27 +184,6 @@ class StaticGraphPainter extends CustomPainter {
                 controlPoint2.dy, p2.dx, p2.dy);
           canvas.drawPath(path, graphLinePaint);
 
-          // for min
-          final pm1 = minPoints[minPoints.length - 2];
-          final pm2 = minPoints.last;
-          final minPoint1 = Offset((pm1.dx + pm2.dx) / 2, pm1.dy);
-          final minPoint2 = Offset((pm1.dx + pm2.dx) / 2, pm2.dy);
-          final minPath = Path()
-            ..moveTo(pm1.dx, pm1.dy)
-            ..cubicTo(minPoint1.dx, minPoint1.dy, minPoint2.dx, minPoint2.dy,
-                pm2.dx, pm2.dy);
-          canvas.drawPath(minPath, minMaxLinePaint);
-
-          // for max
-          final pmx1 = maxPoints[maxPoints.length - 2];
-          final pmx2 = maxPoints.last;
-          final maxPoint1 = Offset((pmx1.dx + pmx2.dx) / 2, pmx1.dy);
-          final maxPoint2 = Offset((pmx1.dx + pmx2.dx) / 2, pmx2.dy);
-          final maxPath = Path()
-            ..moveTo(pmx1.dx, pmx1.dy)
-            ..cubicTo(maxPoint1.dx, maxPoint1.dy, maxPoint2.dx, maxPoint2.dy,
-                pmx2.dx, pmx2.dy);
-          canvas.drawPath(maxPath, minMaxLinePaint);
         }
       }
     }

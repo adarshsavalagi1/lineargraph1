@@ -86,20 +86,24 @@ class ChartPainter extends CustomPainter {
 
         // Draw a cubic Bezier curve to the current min point
         shadedPath.cubicTo(
-            (prevMin.dx + currentMin.dx) / 2, prevMin.dy,
-            (prevMin.dx + currentMin.dx) / 2, currentMin.dy,
-            currentMin.dx, currentMin.dy
-        );
+            (prevMin.dx + currentMin.dx) / 2,
+            prevMin.dy,
+            (prevMin.dx + currentMin.dx) / 2,
+            currentMin.dy,
+            currentMin.dx,
+            currentMin.dy);
 
         // Draw a line to the current max point
         shadedPath.lineTo(currentMax.dx, currentMax.dy);
 
         // Draw a cubic Bezier curve back to the previous max point
         shadedPath.cubicTo(
-            (prevMax.dx + currentMax.dx) / 2, currentMax.dy,
-            (prevMax.dx + currentMax.dx) / 2, prevMax.dy,
-            prevMax.dx, prevMax.dy
-        );
+            (prevMax.dx + currentMax.dx) / 2,
+            currentMax.dy,
+            (prevMax.dx + currentMax.dx) / 2,
+            prevMax.dy,
+            prevMax.dx,
+            prevMax.dy);
 
         shadedPath.close();
 
@@ -118,7 +122,6 @@ class ChartPainter extends CustomPainter {
       }
     }
   }
-
 
   void markSelectedLine(
       Canvas canvas, double xStep, double yStep, double y2, double x1) {
