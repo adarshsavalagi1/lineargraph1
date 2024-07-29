@@ -55,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           gPoints: newSetData,
                                           isToday: true,
                                           selectedHour: _selectedHour,
-                                          isTouched: _isTouched),
+                                          isTouched: _isTouched, maxBound: 210),
                                     )
                                   : const EmptyWidget(),
                             ),

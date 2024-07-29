@@ -10,12 +10,13 @@ class ChartPainter extends CustomPainter {
   final int selectedHour;
   final bool isTouched;
   final bool isToday;
-
+  final int maxBound;
   ChartPainter(
       {required this.gPoints,
       required this.selectedHour,
       required this.isTouched,
-      required this.isToday});
+      required this.isToday,
+      required this.maxBound});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -24,16 +25,25 @@ class ChartPainter extends CustomPainter {
     const y1 = 0.0;
     final y2 = size.height;
     final xStep = (x2 - x1) / 48;
-    final yStep = (y2 - y1) / 140;
+    const lowerBound = 20;
+    int maximumValue = maxBound + lowerBound;
+    while (maximumValue % 10 != 0) {
+      maximumValue++;
+    }
+    final upperBound = maximumValue;
+    final middle = ((upperBound - lowerBound) ~/ 2) + lowerBound;
+    final List<int> yLabels = [lowerBound, middle, upperBound];
+
+    final yStepBG = (y2 - y1) / (upperBound - lowerBound + 20);
 
     // 1. construct graph skeleton
-    constructGraph(canvas, size, x1, x2, xStep, yStep, y1, y2);
+    constructGraph(canvas, size, x1, x2, xStep, yStepBG, y1, y2, yLabels);
 
     // 2. Plotting the graph
-    plotGraph(canvas, xStep, yStep, y1, y2);
+    plotGraph(canvas, xStep, yStepBG, y1, y2);
 
     // 3. mark the selected Line
-    markSelectedLine(canvas, xStep, yStep, y2, x1);
+    markSelectedLine(canvas, xStep, yStepBG, y2, x1);
 
     // 3.1 Selected Tooltip
     drawSelectedToolTip(canvas, xStep);
@@ -130,7 +140,7 @@ class ChartPainter extends CustomPainter {
     final selectedLinePaint = Paint()
       ..color = Colors.black
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+      ..strokeWidth = 1.0;
 
     final Paint minMaxToolTipPaint = Paint()
       ..color = Colors.black
@@ -142,7 +152,7 @@ class ChartPainter extends CustomPainter {
       if (selectedHourPresent) {
         const double dashHeight = 5.0;
         const double dashSpace = 3.0;
-        double startY = x1;
+        double startY = x1 - 5;
         final dx = selectedHour * xStep;
 
         while (startY < y2) {
@@ -256,7 +266,7 @@ class ChartPainter extends CustomPainter {
   }
 
   void constructGraph(Canvas canvas, Size size, double x1, double x2,
-      double xStep, double yStep, double y1, double y2) {
+      double xStep, double yStep, double y1, double y2, List<int> yLabels) {
     final dashedLinePaint = Paint()
       ..color = Colors.grey.shade300
       ..strokeWidth = 1.0
@@ -277,11 +287,11 @@ class ChartPainter extends CustomPainter {
         textAlign: TextAlign.center, textDirection: TextDirection.ltr);
 
     // 1. Draw y-axis dashed lines at specific positions
-    final List<double> yPositions = [20, 80, 140];
-    const double dashWidth = 5; // Length of each dash
-    const double dashSpace = 8; // Space between dashes
 
-    for (double y in yPositions) {
+    const double dashWidth = 5;
+    const double dashSpace = 8;
+
+    for (int y in yLabels) {
       double startX = x1; // Starting x-coordinate of the dashed line
       double lineY = y2 - (y * yStep); // Y-coordinate of the dashed line
       while (startX < x2) {
@@ -300,14 +310,14 @@ class ChartPainter extends CustomPainter {
 
     //   2. coordinates text along y axis
 
-    for (int i = 0; i < yPositions.length; i++) {
-      final yLabel = '${yPositions[i]}bpm';
+    for (int i = 0; i < yLabels.length; i++) {
+      final yLabel = '${yLabels[i]}bpm';
       textPainter.text = TextSpan(
         text: yLabel,
         style: const TextStyle(color: Colors.black, fontSize: 10),
       );
       textPainter.layout();
-      final y = y2 - yPositions[i] * yStep - 5;
+      final y = y2 - yLabels[i] * yStep - 5;
       textPainter.paint(canvas, Offset(x2 + 10, y));
     }
 
