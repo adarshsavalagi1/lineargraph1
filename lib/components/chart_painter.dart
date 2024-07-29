@@ -35,10 +35,9 @@ class ChartPainter extends CustomPainter {
     final List<int> yLabels = [lowerBound, middle, upperBound];
 
     final yStepBG = (y2 - y1) / (upperBound - lowerBound + 20);
-    final yStep = (y2 - y1) / (upperBound - lowerBound + 20);
 
     // 1. construct graph skeleton
-    constructGraph(canvas, size, x1, x2, xStep, yStep, y1, y2, yLabels);
+    constructGraph(canvas, size, x1, x2, xStep, yStepBG, y1, y2, yLabels);
 
     // 2. Plotting the graph
     plotGraph(canvas, xStep, yStepBG, y1, y2);
